@@ -289,7 +289,7 @@ namespace Jtol{
         server_sockfd=new vector<Net>;
         sockaddr_in server_address[100];
         int server_len[100];
-        // µù¥U Winsock DLL
+        // ÂµÃ¹Â¥U Winsock DLL
         WSADATA wsadata;
         if(WSAStartup(0x101,(LPWSADATA)&wsadata) != 0) {
             printf("Winsock Error\n");
@@ -655,7 +655,7 @@ namespace Jtol{
     template<typename T,typename... Args>
     Thread ThreadCreate(T will_run, Args... args){
         Thread td=new thread(will_run,args...);
-        return td;
+        return td;å¦‚asdf
         }
     void Wait(Thread thr){
         thr->join();
@@ -1446,12 +1446,12 @@ namespace Jtol{
     void _GetConsoleTitle(char* title, DWORD nSize){
         GetConsoleTitle(title, nSize);
         }
-    void gotoxy(int x, int  y){
+    void GoToxy(int x, int  y){
         COORD point;
         point.X = x, point.Y = y;
         SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), point);
         }
-    void getxy(int &x, int &y){
+    void Getxy(int &x, int &y){
         CONSOLE_SCREEN_BUFFER_INFO csbi;
         GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
         x = csbi.dwCursorPosition.X;

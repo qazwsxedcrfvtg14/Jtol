@@ -1,19 +1,30 @@
 請記得在連結器內加入 "-lwsock32"
+如果要執行檔可以跨電腦執行請再加入 "-static"
 然後使用了Jtol的namespace
 結構:
     Time 存時間
     Pos 存座標(f,s)
-    Net 回傳網路連線用指針
+    Net 網路連線用指針
     Color 存顏色(R,G,B)
+    Node Html_DOM節點
+    Thread 執行緒指針
+    DLL DLL檔案指針
+    rwlock 讀寫鎖, read_lock(), write_lock() ,unlock()
 函式:
+    Setup()
+        初始化
     GetTime():Time
         取得時間
     Delay()
-        精確等待時間(毫秒)，會嚴重消耗CPU
+        精確等待時間(毫秒)
     GetPos():Pos
         取得滑鼠座標
     GetCol(int x,int y):Color
         取得座標顏色
+    GetColFast(int x,int y):Color
+        快速取得螢幕顏色，但是嚴重消耗CPU
+    GetColFastStop
+        停止GetColFast的背景運作
     GetCol(Pos p):Color
         取得座標顏色
     Click()
@@ -27,7 +38,7 @@
     MoveEX(int x,int y,int t=0)
         滑鼠平滑移動(t是移動時間)，且不會程式不會停在這裡
     Clear()
-        清除畫面
+        清除Console畫面
     ChkKey(int key):bool
         按鈕是否是按住的
     Key(int key):bool
@@ -48,8 +59,66 @@
         取得網路訊息
     NetSend(NET sock,char *s)
         送出網路訊息
-    Setup()
-        初始化
+    FileToStr(const char *file_name):string
+        將字串寫入檔案
+    StrToFile(string s,const char *file_name)
+        把檔案中全部字元放入字串
+    UTCTime()
+        印出現在時間之標準格式
+    IntToStr(int x):string
+        int->string
+    StrToInt(string x):int
+        string->int
+    HtmlToNode(string s):Node*
+        把一個html字串轉換為DOM節點
+    HttpDecode(string s):Node
+        解析http header
+    ThreadCreate(function,args...):Thread
+        建立新執行緒
+    Wait(Thread thr)
+        等待thr結束
+    Alert(const char *content="",const char *titile="")
+        彈出一個小視窗
+    HideConsole()
+        隱藏Console
+    LoadDLL(string dll_name):DLL
+        讀取DLL檔
+    FreeDLL(DLL LinstLib)
+        釋放DLL檔
+    GetDLLFunc(DLL hinstLib,string s):function<Signature>
+        取得DLL檔中的函式指標
+    WinCreat(HINSTANCE hInstance,T WndProc):Hand
+        建立視窗
+    ReadBMP(string file_name):BMP
+        讀取bmp檔案
+    WriteBMP(string out,BMP pic)
+        寫入bmp檔案
+    Dir(string s):vector<string>
+        列出某目錄下的檔案
+    FileExists(const char * file):int
+        檢查檔案是否存在
+    FileFullName(string s):string
+        取得檔案完整名稱
+    SetConsoleTitle(const char* title)
+        設定Console Title
+    GetConsoleTitle(char* title, DWORD nSize)
+        取得Console Title
+    GoToxy(int x,int  y)
+        移動Console上的游標位置
+    Getxy(int &x,int  &y)
+        取得Console上的游標位置
+    SetColor(int color=-1)
+        設定Console顏色
+    GetConsoleWindowSize(DWORD &W, DWORD &H)
+        取得Console視窗大小
+    SetConsoleWindowSize(SHORT x, SHORT y)
+        設定Console視窗大小
+    SetTransparenty(HWND hWnd,int alpah=127)
+        設定視窗透明度
+    SetTransparentyColor(HWND hWnd,int color,int alpah=255)
+        設定某顏色透明
+    GetHwndFromPoint(Pos p)
+        取得某點所對應到的視窗的指針
 鍵盤對應表
     $Rmouse_BUTTON_L = 0x01        # left mouse button
     $Rmouse_BUTTON_R = 0x02        # right mouse button
