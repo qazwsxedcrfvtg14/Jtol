@@ -9,8 +9,6 @@
 #include<process.h>
 #include<chrono>
 #include<ext/rope>
-#include<GL/gl.h>
-#include<GL/glu.h>
 #undef UNICODE
 #define UNICODE
 #define f first
@@ -289,7 +287,7 @@ namespace Jtol{
         server_sockfd=new vector<Net>;
         sockaddr_in server_address[100];
         int server_len[100];
-        // µù¥U Winsock DLL
+        //Winsock DLL
         WSADATA wsadata;
         if(WSAStartup(0x101,(LPWSADATA)&wsadata) != 0) {
             printf("Winsock Error\n");
@@ -655,7 +653,7 @@ namespace Jtol{
     template<typename T,typename... Args>
     Thread ThreadCreate(T will_run, Args... args){
         Thread td=new thread(will_run,args...);
-        return td;如asdf
+        return td;
         }
     void Wait(Thread thr){
         thr->join();
