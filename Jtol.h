@@ -1,4 +1,4 @@
-//Jtol.h v1.6
+//Jtol.h v1.7
 #include<bits/stdc++.h>
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0500
@@ -9,6 +9,8 @@
 #include<process.h>
 #include<chrono>
 #include<ext/rope>
+#include"md5.h"
+#include"lodepng.h"
 #undef UNICODE
 #define UNICODE
 #define f first
@@ -28,9 +30,10 @@ namespace Jtol{
     HDC hdc_;
     int _ScreenX=1920,_ScreenY=1080;
     struct Color{
-        int R,G,B;
+        unsigned char R,G,B,A;
         Color(){}
-        Color(int r,int g,int b){R=r,G=g,B=b;}
+        Color(unsigned char r,unsigned char g,unsigned char b){R=r,G=g,B=b,A=255;}
+        Color(unsigned char r,unsigned char g,unsigned char b,unsigned char a){R=r,G=g,B=b,A=a;}
         //L(){return (R+G+B)/3;}
         L(){return max(R,max(G,B));}
         };
@@ -1256,8 +1259,8 @@ namespace Jtol{
             }
         return 2;
         }
-    typedef vector<vector<Color>> BMP;
-    BMP ReadBMP(string in){
+    typedef vector<vector<Color>> Pic;
+    Pic ReadBMP(string in){
         unsigned char* rarray;
         unsigned char* garray;
         unsigned char* barray;
@@ -1266,8 +1269,8 @@ namespace Jtol{
         if(bmp_read(in.c_str(),&xsize,&ysize,&bsize,&rarray,&garray,&barray)==1){
             puts("1 BMP_READ failed.");
             }
-        printf("%d %d\n",ysize,xsize);
-        BMP pic;
+        //printf("%d %d\n",ysize,xsize);
+        Pic pic;
         for(int i=0;i<ysize;i++){
             pic.push_back(vector<Color>());
             for(int j=0;j<xsize;j++){
@@ -1281,7 +1284,7 @@ namespace Jtol{
         if(barray)free(barray);
         return pic;
         }
-    int WriteBMP(string out,BMP pic){
+    int WriteBMP(string out,Pic pic){
         unsigned char* rarray;
         unsigned char* garray;
         unsigned char* barray;
@@ -1306,6 +1309,45 @@ namespace Jtol{
         delete []barray;
         return 0;
         }
+    Pic ReadPNG(string in){
+        std::vector<unsigned char> png;
+        std::vector<unsigned char> image; //the raw pixels
+        unsigned width, height;
+        lodepng::State state; //optionally customize this one
+        unsigned error = lodepng::load_file(png, in.c_str()); //load the image file with given filename
+        if(!error) error = lodepng::decode(image, width, height, state, png);
+        //State state contains extra information about the PNG such as text chunks, ...
+        //if there's an error, display it
+        if(error) std::cout << "decoder error " << error << ": "<< lodepng_error_text(error) << std::endl;
+        //the pixels are now in the vector "image", 4 bytes per pixel, ordered RGBARGBA..., use it as texture, draw it, ...
+        //printf("%d %d\n",width,height);
+        Pic pic;
+        pic.resize(height);
+        for(int i=0;i<height;i++){
+            pic[i].resize(width);
+            for(int j=0;j<width;j++)
+                pic[i][j]=Color(image[(i*width+j)*4],image[(i*width+j)*4+1],image[(i*width+j)*4+2],image[(i*width+j)*4+3]);
+            }
+        return pic;
+        }
+    void WritePNG(string out,Pic pic){
+        std::vector<unsigned char> image;
+        unsigned width=pic[0].size();
+        unsigned height=pic.size();
+        for(int i=0;i<height;i++)
+            for(int j=0;j<width;j++)
+                image.push_back(pic[i][j].R),
+                image.push_back(pic[i][j].G),
+                image.push_back(pic[i][j].B),
+                image.push_back(pic[i][j].A);
+        std::vector<unsigned char> png;
+        lodepng::State state; //optionally customize this one
+        unsigned error = lodepng::encode(png, image, width, height, state);
+        if(!error) lodepng::save_file(png,out.c_str());
+        //if there's an error, display it
+        if(error) std::cout << "encoder error " << error << ": "<< lodepng_error_text(error) << std::endl;
+        }
+
     vector<string> Dir(string s){
         char szDir[65535];
         char dir[65535];
@@ -1409,7 +1451,7 @@ namespace Jtol{
             //buf = (pBGR) malloc(_ScreenX * _ScreenY * 4);
             BitBlt(sr_copy, 0, 0, _ScreenX, _ScreenY, sr, 0, 0, SRCCOPY);
             Background_Update_Screen_Lock.write_lock();
-            GetDIBits(sr_copy, bmp_copy, 0, _ScreenY, Background_Update_Screen_Buff, &bi, NULL);
+            GetDIBits(sr_copy, bmp_copy, 0, _ScreenY, Background_Update_Screen_Buff, &bi, 0);
             Background_Update_Screen_Lock.unlock();
             //Pos p=GetPos();
             if(Background_Update_Screen_Off)return;
@@ -1642,4 +1684,82 @@ namespace Jtol{
         pt.y=p.s;
         return WindowFromPoint(pt);
         }
+    static const std::string base64_chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    "abcdefghijklmnopqrstuvwxyz"
+    "0123456789+/";
+    std::string base64_encode(unsigned char const*, unsigned int len);
+    std::string base64_decode(std::string const& s);
+    static inline bool is_base64(unsigned char c){
+        return (isalnum(c)||(c=='+')||(c=='/'));
+        }
+    std::string base64_encode(unsigned char const* bytes_to_encode, unsigned int in_len){
+        std::string ret;
+        int i = 0;
+        int j = 0;
+        unsigned char char_array_3[3];
+        unsigned char char_array_4[4];
+        while(in_len--){
+            char_array_3[i++] = *(bytes_to_encode++);
+            if(i == 3){
+                char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
+                char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
+                char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
+                char_array_4[3] = char_array_3[2] & 0x3f;
+
+                for(i = 0; (i <4) ; i++)
+                    ret += base64_chars[char_array_4[i]];
+                i = 0;
+                }
+            }
+        if(i){
+            for(j = i; j < 3; j++)
+                char_array_3[j] = '\0';
+            char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
+            char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
+            char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
+            char_array_4[3] = char_array_3[2] & 0x3f;
+            for (j = 0; (j < i + 1); j++)
+                ret += base64_chars[char_array_4[j]];
+            while((i++ < 3))
+                ret += '=';
+            }
+        return ret;
+        }
+    std::string base64_decode(std::string const& encoded_string){
+        int in_len = encoded_string.size();
+        int i = 0;
+        int j = 0;
+        int in_ = 0;
+        unsigned char char_array_4[4], char_array_3[3];
+        std::string ret;
+        while (in_len-- && ( encoded_string[in_] != '=') && is_base64(encoded_string[in_])){
+            char_array_4[i++] = encoded_string[in_];
+            in_++;
+            if(i ==4){
+                for (i = 0; i <4; i++)
+                    char_array_4[i] = base64_chars.find(char_array_4[i]);
+
+                char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
+                char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
+                char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
+
+                for (i = 0; (i < 3); i++)
+                    ret += char_array_3[i];
+                i = 0;
+                }
+            }
+        if(i){
+            for (j = i; j <4; j++)
+                char_array_4[j] = 0;
+            for (j = 0; j <4; j++)
+                char_array_4[j] = base64_chars.find(char_array_4[j]);
+            char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
+            char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
+            char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
+            for (j = 0; (j < i - 1); j++) ret += char_array_3[j];
+            }
+        return ret;
+        }
+
     }

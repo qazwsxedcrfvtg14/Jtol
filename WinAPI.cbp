@@ -12,10 +12,11 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-std=c++14" />
+					<Add option="-std=c++11" />
 				</Compiler>
 				<Linker>
-					<Add option="-lws2_32 -static" />
+					<Add option="-lws2_32" />
+					<Add option="-static" />
 				</Linker>
 			</Target>
 			<Target title="Release">
@@ -42,8 +43,11 @@
 			<Add library="winmm" />
 		</Linker>
 		<Unit filename="Jtol.h" />
-		<Unit filename="glut/glut.h" />
+		<Unit filename="lodepng.cpp" />
+		<Unit filename="lodepng.h" />
 		<Unit filename="main.cpp" />
+		<Unit filename="md5.cpp" />
+		<Unit filename="md5.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />
