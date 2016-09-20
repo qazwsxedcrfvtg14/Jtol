@@ -1,125 +1,136 @@
-½Ğ°O±o¦b³sµ²¾¹¤º¥[¤J "-lwsock32"
-¦pªG­n°õ¦æÀÉ¥i¥H¸ó¹q¸£°õ¦æ½Ğ¦A¥[¤J "-static"
-µM«á¨Ï¥Î¤FJtolªºnamespace
-µ²ºc:
-    Time ¦s®É¶¡
-    Pos ¦s®y¼Ğ(f,s)
-    Net ºô¸ô³s½u¥Î«ü°w
-    Color ¦sÃC¦â(R,G,B)
-    Node Html_DOM¸`ÂI
-    Thread °õ¦æºü«ü°w
-    DLL DLLÀÉ®×«ü°w
-    rwlock Åª¼gÂê, read_lock(), write_lock() ,unlock()
-¨ç¦¡:
+è«‹è¨˜å¾—åœ¨é€£çµå™¨å…§åŠ å…¥ "-lwsock32"
+å¦‚æœè¦åŸ·è¡Œæª”å¯ä»¥è·¨é›»è…¦åŸ·è¡Œè«‹å†åŠ å…¥ "-static"
+ç„¶å¾Œä½¿ç”¨äº†Jtolçš„namespace
+çµæ§‹:
+    Time å­˜æ™‚é–“
+    Pos å­˜åº§æ¨™(f,s)
+    Net ç¶²è·¯é€£ç·šç”¨æŒ‡é‡
+    Color å­˜é¡è‰²(R,G,B,A)
+    Node Html_DOMç¯€é»
+    Thread åŸ·è¡Œç·’æŒ‡é‡
+    DLL DLLæª”æ¡ˆæŒ‡é‡
+    rwlock è®€å¯«é–, read_lock(), write_lock() ,unlock()
+    Pic åœ–ç‰‡çµæ§‹=vector<vector<Color>>
+å‡½å¼:
     Setup()
-        ªì©l¤Æ
+        åˆå§‹åŒ–
     GetTime():Time
-        ¨ú±o®É¶¡
+        å–å¾—æ™‚é–“
     Delay()
-        ºë½Tµ¥«İ®É¶¡(²@¬í)
+        ç²¾ç¢ºç­‰å¾…æ™‚é–“(æ¯«ç§’)
     GetPos():Pos
-        ¨ú±o·Æ¹«®y¼Ğ
+        å–å¾—æ»‘é¼ åº§æ¨™
     GetCol(int x,int y):Color
-        ¨ú±o®y¼ĞÃC¦â
+        å–å¾—åº§æ¨™é¡è‰²
     GetColFast(int x,int y):Color
-        §Ö³t¨ú±o¿Ã¹õÃC¦â¡A¦ı¬OÄY­«®ø¯ÓCPU
+        å¿«é€Ÿå–å¾—è¢å¹•é¡è‰²ï¼Œä½†æ˜¯åš´é‡æ¶ˆè€—CPU
     GetColFastStop
-        °±¤îGetColFastªº­I´º¹B§@
+        åœæ­¢GetColFastçš„èƒŒæ™¯é‹ä½œ
     GetCol(Pos p):Color
-        ¨ú±o®y¼ĞÃC¦â
+        å–å¾—åº§æ¨™é¡è‰²
     Click()
-        «ö¤U·Æ¹«¥ªÁä
+        æŒ‰ä¸‹æ»‘é¼ å·¦éµ
     Press()
-        «ö¦í·Æ¹«¥ªÁä
+        æŒ‰ä½æ»‘é¼ å·¦éµ
     Release()
-        ©ñ¶}·Æ¹«¥ªÁä
+        æ”¾é–‹æ»‘é¼ å·¦éµ
     Move(int x,int y,int t=0)
-        ·Æ¹«¥­·Æ²¾°Ê(t¬O²¾°Ê®É¶¡)
+        æ»‘é¼ å¹³æ»‘ç§»å‹•(tæ˜¯ç§»å‹•æ™‚é–“)
     MoveEX(int x,int y,int t=0)
-        ·Æ¹«¥­·Æ²¾°Ê(t¬O²¾°Ê®É¶¡)¡A¥B¤£·|µ{¦¡¤£·|°±¦b³o¸Ì
+        æ»‘é¼ å¹³æ»‘ç§»å‹•(tæ˜¯ç§»å‹•æ™‚é–“)ï¼Œä¸”ä¸æœƒç¨‹å¼ä¸æœƒåœåœ¨é€™è£¡
     Clear()
-        ²M°£Consoleµe­±
+        æ¸…é™¤Consoleç•«é¢
     ChkKey(int key):bool
-        «ö¶s¬O§_¬O«ö¦íªº
+        æŒ‰éˆ•æ˜¯å¦æ˜¯æŒ‰ä½çš„
     Key(int key):bool
-        ¬O§_«ö¤F¬Y­Ó«ö¶s
+        æ˜¯å¦æŒ‰äº†æŸå€‹æŒ‰éˆ•
     WaitKey(int key)
-        µ¥«İ«ö¤U¬Y«ö¶s
+        ç­‰å¾…æŒ‰ä¸‹æŸæŒ‰éˆ•
     PressKey(int key)
-        «ö¦í¬Y«ö¶s
+        æŒ‰ä½æŸæŒ‰éˆ•
     ReleaseKey(int key)
-        ©ñ¶}¬Y«ö¶s
+        æ”¾é–‹æŸæŒ‰éˆ•
     ClickKey(int key)
-        «ö¤U¬Y«ö¶s
+        æŒ‰ä¸‹æŸæŒ‰éˆ•
     NetCreat(char ip[],int port=23,int mode=1):Net
-        «Ø¥ßºô¸ô³s½u
+        å»ºç«‹ç¶²è·¯é€£ç·š
     NetClose(Net sock)
-        Ãö³¬ºô¸ô³s½u
+        é—œé–‰ç¶²è·¯é€£ç·š
     NetGet(Net sock):char*
-        ¨ú±oºô¸ô°T®§
+        å–å¾—ç¶²è·¯è¨Šæ¯
     NetSend(NET sock,char *s)
-        °e¥Xºô¸ô°T®§
+        é€å‡ºç¶²è·¯è¨Šæ¯
     FileToStr(const char *file_name):string
-        ±N¦r¦ê¼g¤JÀÉ®×
+        å°‡å­—ä¸²å¯«å…¥æª”æ¡ˆ
     StrToFile(string s,const char *file_name)
-        §âÀÉ®×¤¤¥ş³¡¦r¤¸©ñ¤J¦r¦ê
+        æŠŠæª”æ¡ˆä¸­å…¨éƒ¨å­—å…ƒæ”¾å…¥å­—ä¸²
     UTCTime()
-        ¦L¥X²{¦b®É¶¡¤§¼Ğ·Ç®æ¦¡
+        å°å‡ºç¾åœ¨æ™‚é–“ä¹‹æ¨™æº–æ ¼å¼
     IntToStr(int x):string
         int->string
     StrToInt(string x):int
         string->int
     HtmlToNode(string s):Node*
-        §â¤@­Óhtml¦r¦êÂà´«¬°DOM¸`ÂI
+        æŠŠä¸€å€‹htmlå­—ä¸²è½‰æ›ç‚ºDOMç¯€é»
     HttpDecode(string s):Node
-        ¸ÑªRhttp header
+        è§£æhttp header
     ThreadCreate(function,args...):Thread
-        «Ø¥ß·s°õ¦æºü
+        å»ºç«‹æ–°åŸ·è¡Œç·’
     Wait(Thread thr)
-        µ¥«İthrµ²§ô
+        ç­‰å¾…thrçµæŸ
     Alert(const char *content="",const char *titile="")
-        ¼u¥X¤@­Ó¤pµøµ¡
+        å½ˆå‡ºä¸€å€‹å°è¦–çª—
     HideConsole()
-        ÁôÂÃConsole
+        éš±è—Console
     LoadDLL(string dll_name):DLL
-        Åª¨úDLLÀÉ
+        è®€å–DLLæª”
     FreeDLL(DLL LinstLib)
-        ÄÀ©ñDLLÀÉ
+        é‡‹æ”¾DLLæª”
     GetDLLFunc(DLL hinstLib,string s):function<Signature>
-        ¨ú±oDLLÀÉ¤¤ªº¨ç¦¡«ü¼Ğ
+        å–å¾—DLLæª”ä¸­çš„å‡½å¼æŒ‡æ¨™
     WinCreat(HINSTANCE hInstance,T WndProc):Hand
-        «Ø¥ßµøµ¡
-    ReadBMP(string file_name):BMP
-        Åª¨úbmpÀÉ®×
-    WriteBMP(string out,BMP pic)
-        ¼g¤JbmpÀÉ®×
+        å»ºç«‹è¦–çª—
+    ReadBMP(string file_name):Pic
+        è®€å–bmpæª”æ¡ˆ
+    WriteBMP(string out,Pic pic)
+        å¯«å…¥bmpæª”æ¡ˆ
+    ReadPNG(string file_name):Pic
+        è®€å–pngæª”æ¡ˆ
+    WritePNG(string out,Pic pic)
+        å¯«å…¥pngæª”æ¡ˆ
     Dir(string s):vector<string>
-        ¦C¥X¬Y¥Ø¿ı¤UªºÀÉ®×
+        åˆ—å‡ºæŸç›®éŒ„ä¸‹çš„æª”æ¡ˆ
     FileExists(const char * file):int
-        ÀË¬dÀÉ®×¬O§_¦s¦b
+        æª¢æŸ¥æª”æ¡ˆæ˜¯å¦å­˜åœ¨
     FileFullName(string s):string
-        ¨ú±oÀÉ®×§¹¾ã¦WºÙ
+        å–å¾—æª”æ¡ˆå®Œæ•´åç¨±
     SetConsoleTitle(const char* title)
-        ³]©wConsole Title
+        è¨­å®šConsole Title
     GetConsoleTitle(char* title, DWORD nSize)
-        ¨ú±oConsole Title
+        å–å¾—Console Title
     GoToxy(int x,int  y)
-        ²¾°ÊConsole¤Wªº´å¼Ğ¦ì¸m
+        ç§»å‹•Consoleä¸Šçš„æ¸¸æ¨™ä½ç½®
     Getxy(int &x,int  &y)
-        ¨ú±oConsole¤Wªº´å¼Ğ¦ì¸m
+        å–å¾—Consoleä¸Šçš„æ¸¸æ¨™ä½ç½®
     SetColor(int color=-1)
-        ³]©wConsoleÃC¦â
+        è¨­å®šConsoleé¡è‰²
     GetConsoleWindowSize(DWORD &W, DWORD &H)
-        ¨ú±oConsoleµøµ¡¤j¤p
+        å–å¾—Consoleè¦–çª—å¤§å°
     SetConsoleWindowSize(SHORT x, SHORT y)
-        ³]©wConsoleµøµ¡¤j¤p
+        è¨­å®šConsoleè¦–çª—å¤§å°
     SetTransparenty(HWND hWnd,int alpah=127)
-        ³]©wµøµ¡³z©ú«×
+        è¨­å®šè¦–çª—é€æ˜åº¦
     SetTransparentyColor(HWND hWnd,int color,int alpah=255)
-        ³]©w¬YÃC¦â³z©ú
+        è¨­å®šæŸé¡è‰²é€æ˜
     GetHwndFromPoint(Pos p)
-        ¨ú±o¬YÂI©Ò¹ïÀ³¨ìªºµøµ¡ªº«ü°w
-Áä½L¹ïÀ³ªí
+        å–å¾—æŸé»æ‰€å°æ‡‰åˆ°çš„è¦–çª—çš„æŒ‡é‡
+    EncodeBase64(string const& decoded_string):string
+        ç·¨ç¢¼æˆbase64
+    DecodeBase64(string const& encoded_string):string
+        ä»¥base64è§£ç¢¼
+    md5(string const& encoded_string):string
+        ç·¨ç¢¼æˆmd5
+éµç›¤å°æ‡‰è¡¨
     $Rmouse_BUTTON_L = 0x01        # left mouse button
     $Rmouse_BUTTON_R = 0x02        # right mouse button
     $Rmouse_BUTTON_M = 0x04        # middle mouse button

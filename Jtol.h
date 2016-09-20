@@ -1323,9 +1323,9 @@ namespace Jtol{
         //printf("%d %d\n",width,height);
         Pic pic;
         pic.resize(height);
-        for(int i=0;i<height;i++){
+        for(unsigned int i=0;i<height;i++){
             pic[i].resize(width);
-            for(int j=0;j<width;j++)
+            for(unsigned int j=0;j<width;j++)
                 pic[i][j]=Color(image[(i*width+j)*4],image[(i*width+j)*4+1],image[(i*width+j)*4+2],image[(i*width+j)*4+3]);
             }
         return pic;
@@ -1334,8 +1334,8 @@ namespace Jtol{
         std::vector<unsigned char> image;
         unsigned width=pic[0].size();
         unsigned height=pic.size();
-        for(int i=0;i<height;i++)
-            for(int j=0;j<width;j++)
+        for(unsigned int i=0;i<height;i++)
+            for(unsigned int j=0;j<width;j++)
                 image.push_back(pic[i][j].R),
                 image.push_back(pic[i][j].G),
                 image.push_back(pic[i][j].B),
@@ -1370,15 +1370,15 @@ namespace Jtol{
         return ret;
         }
     int FileExists(const char * file){
-       WIN32_FIND_DATA FindFileData;
-       HANDLE handle = FindFirstFile(file, &FindFileData) ;
-       int found = handle != INVALID_HANDLE_VALUE;
-       if(found){
+        WIN32_FIND_DATA FindFileData;
+        HANDLE handle = FindFirstFile(file, &FindFileData) ;
+        int found = handle != INVALID_HANDLE_VALUE;
+        if(found){
             //FindClose(&handle); this will crash
             FindClose(handle);
             }
-       return found;
-    }
+        return found;
+        }
     string FileFullName(string s){
         char szBuffer[1000] = "";
         GetFullPathName(s.c_str(),sizeof(szBuffer),szBuffer,NULL);
@@ -1688,12 +1688,12 @@ namespace Jtol{
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "abcdefghijklmnopqrstuvwxyz"
     "0123456789+/";
-    std::string base64_encode(unsigned char const*, unsigned int len);
-    std::string base64_decode(std::string const& s);
     static inline bool is_base64(unsigned char c){
         return (isalnum(c)||(c=='+')||(c=='/'));
         }
-    std::string base64_encode(unsigned char const* bytes_to_encode, unsigned int in_len){
+    std::string EncodeBase64(std::string const& decoded_string){
+        unsigned char const* bytes_to_encode=(unsigned char const*)decoded_string.c_str();
+        unsigned int in_len=decoded_string.length();
         std::string ret;
         int i = 0;
         int j = 0;
@@ -1726,7 +1726,7 @@ namespace Jtol{
             }
         return ret;
         }
-    std::string base64_decode(std::string const& encoded_string){
+    std::string DecodeBase64(std::string const& encoded_string){
         int in_len = encoded_string.size();
         int i = 0;
         int j = 0;

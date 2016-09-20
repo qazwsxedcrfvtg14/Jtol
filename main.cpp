@@ -1,3 +1,4 @@
+#define _USE_MATH_DEFINES
 #include<bits/stdc++.h>
 #include"Jtol.h"
 using namespace Jtol;
@@ -14,25 +15,28 @@ int WinExample(HINSTANCE hInstance);
     return 0;
     }*/
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow){
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
     int argc=__argc; char** argv=__argv;
-    Setup();
-    HideConsole();
-    Wait(ThreadCreate(WinExample,hInstance));
+#pragma GCC diagnostic pop
+    cout<<md5("1234");
+    //HideConsole();
+    //Wait(ThreadCreate(WinExample,hInstance));
+    //system("pause");
     return 0;
     }
 int WinExample(HINSTANCE hInstance){
     WinCreat(hInstance,
         [](HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)->LRESULT{
-            HDC hDC;
             PAINTSTRUCT ps;
-            switch(msg){
-                case WM_PAINT:
-                    hDC = BeginPaint(hWnd, &ps);
-                    EndPaint(hWnd, &ps);
-                    return 0;
-                case WM_DESTROY:
-                    PostQuitMessage(0);
-                    return 0;
+            if(msg==WM_PAINT){
+                /*HDC hDC = */BeginPaint(hWnd, &ps);
+                EndPaint(hWnd, &ps);
+                return 0;
+                }
+            else if(msg==WM_PAINT){
+                PostQuitMessage(0);
+                return 0;
                 }
             return DefWindowProc(hWnd, msg, wParam, lParam);
             }
