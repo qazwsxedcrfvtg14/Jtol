@@ -19,7 +19,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 #pragma GCC diagnostic ignored "-Wunused-variable"
     int argc=__argc; char** argv=__argv;
 #pragma GCC diagnostic pop
-    cout<<md5("1234");
+    Setup();
     //HideConsole();
     //Wait(ThreadCreate(WinExample,hInstance));
     //system("pause");

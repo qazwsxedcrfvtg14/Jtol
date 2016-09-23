@@ -1,4 +1,4 @@
-//Jtol.h v1.7
+//Jtol.h v1.7.1
 #include<bits/stdc++.h>
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0500
@@ -341,7 +341,7 @@ namespace Jtol{
         }
     string FileToStr(const char *fil){
         fstream fin;
-        fin.open(fil,ios::in);
+        fin.open(fil,ios::in|ios::binary);
         string in,ss;
         while(getline(fin,in)){
             //cout<<in;
@@ -352,7 +352,7 @@ namespace Jtol{
         }
     void StrToFile(string s,const char fil[]){
         fstream fout;
-        fout.open(fil,ios::out);
+        fout.open(fil,ios::out|ios::binary);
         fout<<s;
         fout.close();
         }
