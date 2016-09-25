@@ -158,7 +158,6 @@ namespace Jtol{
         Sleep(t);
         keybd_event(key, 0, KEYEVENTF_KEYUP, 0);
         }
-    int putst(string s){return puts(s.c_str());}
     SOCKET NetCreat(const char ip[],int port=23,int mode=1){//mode: 1->NoWait 0->Wait
         //printf("%s %d\n",ip,port);
         NetCreatStatr:;
@@ -1761,5 +1760,306 @@ namespace Jtol{
             }
         return ret;
         }
+    std::string EncodeUrl(const std::string& src){
+        static char hex[] = "0123456789ABCDEF";
+        std::string dst;
 
+        for (size_t i = 0; i < (size_t)src.size(); i++){
+            uint8_t ch = src[i];
+            if (isalnum(ch)){
+                dst += ch;
+                }
+            else if (src[i] == ' '){
+                dst += '+';
+                }
+            else{
+                uint8_t c = static_cast<uint8_t>(src[i]);
+                dst += '%';
+                dst += hex[c / 16];
+                dst += hex[c % 16];
+                }
+            }
+        return dst;
+        }
+    std::string DecodeUrl(const std::string& src){
+        std::string dst, dsturl;
+        int srclen = src.size();
+        for (int i = 0; i < srclen; i++){
+            if (src[i] == '%'){
+                if(isxdigit(src[i + 1]) && isxdigit(src[i + 2])){
+                    char c1 = src[++i];
+                    char c2 = src[++i];
+                    c1 = c1 - 48 - ((c1 >= 'A') ? 7 : 0) - ((c1 >= 'a') ? 32 : 0);
+                    c2 = c2 - 48 - ((c2 >= 'A') ? 7 : 0) - ((c2 >= 'a') ? 32 : 0);
+                    dst += (uint8_t)(c1 * 16 + c2);
+                    }
+                }
+            else if (src[i] == '+'){
+                dst += ' ';
+                }
+            else{
+                dst += src[i];
+                }
+            }
+        /*
+        int len = dst.size();
+        for(uint32_t pos = 0; (int)pos < len;){
+            uint32_t nvalue = utf8_decode((char *)dst.c_str(), &pos);
+            dsturl += (uint8_t)nvalue;
+            }
+        return dsturl;
+        */
+        return dst;
+        }
+    std::string EncodeUtf8(const std::wstring &wstr){
+        if (wstr.empty()) return std::string();
+        int size_needed = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), NULL, 0, NULL, NULL);
+        std::string strTo(size_needed, 0);
+        WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), &strTo[0], size_needed, NULL, NULL);
+        return strTo;
+        }
+    std::wstring DecodeUtf8(const std::string &str){
+        if (str.empty()) return std::wstring();
+        int size_needed = MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), NULL, 0);
+        std::wstring wstrTo(size_needed, 0);
+        MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), &wstrTo[0], size_needed);
+        return wstrTo;
+        }
+    struct Json_Node {
+        int type;
+        wstring data;
+        map<wstring, Json_Node>child;
+        vector<Json_Node>ary;
+        };
+    std::string trim(std::string s){
+        if(s.empty())
+            return s;
+        s.erase(0,s.find_first_not_of(" \t\n\r\0\x0B"));
+        s.erase(s.find_last_not_of(" \t\n\r\0\x0B")+1);
+        return s;
+        }
+    std::wstring trim(std::wstring s){
+        if(s.empty())
+            return s;
+        s.erase(0,s.find_first_not_of(L" \t\n\r\0\x0B"));
+        s.erase(s.find_last_not_of(L" \t\n\r\0\x0B")+1);
+        return s;
+        }
+    wstring erase_quote(wstring s) {
+        s = trim(s);
+        if (s.front() == '"'&&s.back() == '"') {
+            if (s.length() > 2)s = s.substr(1, s.length() - 2);
+            else s = L"";
+            }
+        return s;
+        }
+    void ReadJson(wstring s, Json_Node& now) {
+        s = trim(s);
+        if (s.front() == '{'&&s.back() == '}') {
+            if (s.length()>2)s = s.substr(1, s.length() - 2);
+            else s = L"";
+            now.type = 1;
+            wstring nw;
+            int ntp = 0;
+            stack<wchar_t>st;
+            int beg;
+            int len = (int)(s.length());
+            for (int i = 0;i <= len;i++) {
+                if (ntp == 0) {
+                    if (s[i] == ':')ntp = 1, beg = i + 1;
+                    else nw += s[i];
+                    }
+                else if (ntp == 1) {
+                    if (s[i] == '{')
+                        st.push('{');
+                    else if (s[i] == '[')
+                        st.push('[');
+                    else if (s[i] == '}') {
+                        if (st.top() == '{')
+                            st.pop();
+                        }
+                    else if (s[i] == ']') {
+                        if (st.top() == '[')
+                            st.pop();
+                        }
+                    else if (s[i] == '"') {
+                        if (!st.empty() && st.top() == '"')
+                            st.pop();
+                        else
+                            st.push('"');
+                        }
+                    else if (s[i] == '\\') {
+                        i++;
+                        }
+                    else if (s[i] == ',' || s[i] == 0) {
+                        if (st.empty())
+                            ReadJson(s.substr(beg, i - beg), now.child[erase_quote(nw)]), ntp = 0, nw = L"";
+                        }
+                    }
+                }
+            }
+        else if (s.front() == '['&&s.back() == ']') {
+            if (s.length()>2)s = s.substr(1, s.length() - 2);
+            else s = L"";
+            now.type = 2;
+            wstring nw;
+            stack<wchar_t>st;
+            int beg = 0;
+            int len = (int)(s.length());
+            for (int i = 0;i <= len;i++) {
+                if (s[i] == '{')
+                    st.push('{');
+                else if (s[i] == '[')
+                    st.push('[');
+                else if (s[i] == '}') {
+                    if (st.top() == '{')
+                        st.pop();
+                    }
+                else if (s[i] == ']') {
+                    if (st.top() == '[')
+                        st.pop();
+                    }
+                else if (s[i] == '"') {
+                    if (!st.empty() && st.top() == '"')
+                        st.pop();
+                    else
+                        st.push('"');
+                    }
+                else if (s[i] == '\\') {
+                    i++;
+                    }
+                else if (s[i] == ',' || s[i] == 0) {
+                    if (st.empty()) {
+                        now.ary.push_back(Json_Node()), ReadJson(s.substr(beg, i - beg), now.ary.back()), beg = i + 1;
+                        }
+                    }
+                }
+            }
+        else {
+            now.type = 0;
+            now.data = erase_quote(s);
+            }
+        }
+
+    Json_Node ReadJson(wstring s) {
+        s = trim(s);
+        Json_Node now;
+        if (s.front() == '{'&&s.back() == '}') {
+            now.type = 1;
+            if (s.length()>2)s = s.substr(1, s.length() - 2);
+            else s = L"";
+            wstring nw;
+            int ntp = 0;
+            stack<wchar_t>st;
+            int beg;
+            int len = (int)(s.length());
+            for (int i = 0;i <= len;i++) {
+                if (ntp == 0) {
+                    if (s[i] == ':')ntp = 1, beg = i + 1;
+                    else nw += s[i];
+                    }
+                else if (ntp == 1) {
+                    if (s[i] == '{')
+                        st.push('{');
+                    else if (s[i] == '[')
+                        st.push('[');
+                    else if (s[i] == '}') {
+                        if (st.top() == '{')
+                            st.pop();
+                        }
+                    else if (s[i] == ']') {
+                        if (st.top() == '[')
+                            st.pop();
+                        }
+                    else if (s[i] == '"') {
+                        if (!st.empty() && st.top() == '"')
+                            st.pop();
+                        else
+                            st.push('"');
+                        }
+                    else if (s[i] == '\\') {
+                        i++;
+                        }
+                    else if (s[i] == ',' || s[i] == 0) {
+                        if (st.empty())
+                            ReadJson(s.substr(beg, i - beg), now.child[erase_quote(nw)]), ntp = 0, nw = L"";
+                        }
+                    }
+                }
+            }
+        else if (s.front() == '['&&s.back() == ']') {
+            if (s.length()>2)s = s.substr(1, s.length() - 2);
+            else s = L"";
+            now.type = 2;
+            wstring nw;
+            stack<wchar_t>st;
+            int beg = 0;
+            int len = (int)(s.length());
+            for (int i = 0;i <= len;i++) {
+                if (s[i] == '{')
+                    st.push('{');
+                else if (s[i] == '[')
+                    st.push('[');
+                else if (s[i] == '}') {
+                    if (st.top() == '{')
+                        st.pop();
+                    }
+                else if (s[i] == ']') {
+                    if (st.top() == '[')
+                        st.pop();
+                    }
+                else if (s[i] == '"') {
+                    if (!st.empty() && st.top() == '"')
+                        st.pop();
+                    else
+                        st.push('"');
+                    }
+                else if (s[i] == '\\') {
+                    i++;
+                    }
+                else if (s[i] == ',' || s[i] == 0) {
+                    if (st.empty())
+                        now.ary.push_back(Json_Node()), ReadJson(s.substr(beg, i - beg), now.ary.back()), beg = i + 1;
+                    }
+                }
+            }
+        else {
+            now.type = 0;
+            now.data = erase_quote(s);
+            }
+        return now;
+        }
+    void PraseJson(const Json_Node& now, int l,wstring &out){
+        if (now.type == 0)out += now.data;
+        else if (now.type == 1) {
+            out += L"{\n";
+            for (auto &x : now.child) {
+                for (int i = 0;i <= l;i++)
+                    out += L"  ";
+                out += x.f + L": ";
+                PraseJson(x.s, l + 1,out);
+                out += L"\n";
+                }
+            for (int i = 0;i < l;i++)
+                out += L"  ";
+            out += L"}\n";
+            }
+        else if (now.type == 2) {
+            out += L"[\n";
+            for (auto &x : now.ary) {
+                for (int i = 0;i <= l;i++)
+                    out += L"  ";
+                PraseJson(x,l + 1,out);
+                out += L"\n";
+                }
+            for (int i = 0;i < l;i++)
+                out += L"  ";
+            out += L"]\n";
+            }
+        }
+    wstring ReadableJson(const Json_Node&now){
+        wstring res;
+        PraseJson(now,0,res);
+        return res;
+        }
     }
