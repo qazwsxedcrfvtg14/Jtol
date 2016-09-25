@@ -1,4 +1,4 @@
-請記得在連結器內加入 "-lwsock32"
+請記得在連結器內加入 "-lwsock32","-lgdi32","-luser32","-lkernel32","-lcomctl32"
 如果要執行檔可以跨電腦執行請再加入 "-static"
 然後使用了Jtol的namespace
 結構:
@@ -11,6 +11,7 @@
     DLL DLL檔案指針
     rwlock 讀寫鎖, read_lock(), write_lock() ,unlock()
     Pic 圖片結構=vector<vector<Color>>
+    Json_Node {type,data,child,ary}
 函式:
     Setup()
         初始化
@@ -130,6 +131,19 @@
         以base64解碼
     md5(string const& encoded_string):string
         編碼成md5
+    EncodeUrl(string const& decoded_string):string
+        編碼成Url字串
+    DecodeUrl(string const& encoded_string):string
+        以Url字串解碼
+    EncodeUtf8(wstring const& encoded_string):string
+        編碼成Utf8
+    DecodeUtf8(string const& encoded_string):wstring
+        以Utf8解碼
+    ReadJson(wstring s):Json_Node
+        解析Json字串
+    ReadableJson(const Json_Node&now):wstring
+        將Json物件變成可讀字串
+    
 鍵盤對應表
     $Rmouse_BUTTON_L = 0x01        # left mouse button
     $Rmouse_BUTTON_R = 0x02        # right mouse button
