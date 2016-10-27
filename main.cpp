@@ -20,8 +20,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     int argc=__argc; char** argv=__argv;
 #pragma GCC diagnostic pop
     Setup();
-    auto json=ReadJson(LR"({apple:["aaaa","bbb"]})");
-    puts(EncodeUtf8(ReadableJson(json)).c_str());
     //HideConsole();
     //Wait(ThreadCreate(WinExample,hInstance));
     //system("pause");

@@ -1,4 +1,4 @@
-//Jtol.h v1.7.1
+//Jtol.h v1.7.2
 #include<bits/stdc++.h>
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0500
@@ -232,6 +232,7 @@ namespace Jtol{
         if(recv(sock,buf,NetBuf[sock].size(),0)!=SOCKET_ERROR){
             return buf;
             }
+        else return 0;
         //return &(NetBuf[sock][0]);
         return NetBuf[sock].c_str();
         }
