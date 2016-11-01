@@ -1,4 +1,4 @@
-//Jtol.h v1.7.2
+//Jtol.h v1.7.2.1
 #include<bits/stdc++.h>
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0500
@@ -2062,5 +2062,84 @@ namespace Jtol{
         wstring res;
         PraseJson(now,0,res);
         return res;
+        }
+    void TelnetPrint(string s){
+        string bufer;
+        int len=s.length();
+        //cerr<<s;
+        for(int i=0;i<len;i++){
+            if(s[i]==27&&i+1<len&&s[i+1]=='['){
+                int k=i;
+                for(i+=2;i<len;i++){
+                    if(s[i]=='J'){
+                        printf("%s",&bufer[0]);
+                        bufer="";
+                        Clr();
+                        break;
+                        }
+                    if(s[i]=='K'){
+                        printf("%s",&bufer[0]);
+                        bufer="";
+                        int x,y;
+                        getxy(x,y);
+                        for(int i=0;i<(79-x);i++)
+                            putchar(' ');
+                        break;
+                        }
+                    if(s[i]=='m'){
+                        break;
+                        }
+                    if(s[i]=='H'){
+                        int a[3]={0,0},type=0;
+                        for(int j=k+2;j<i;j++){
+                            if(s[j]>='0'&&s[j]<='9'){
+                                a[type]=a[type]*10+s[j]-'0';
+                                }
+                            else{
+                                type++;
+                                }
+                            }
+                        if(a[1])a[1]--;
+                        if(a[0])a[0]--;
+
+                            printf("%s",&bufer[0]);
+                            bufer="";
+                            gotoxy(a[0],a[1]);
+                        //gotoxy(0,0);
+                        break;
+                        }
+                    if(s[i]>='a'&&s[i]<='z'){
+                        //printf("!!!!!!!%c!!!!!!",s[i]);
+                        break;
+                        }
+                    if(s[i]>='A'&&s[i]<='Z'){
+                        //printf("!!!!!!!%c!!!!!!",s[i]);
+                        break;
+                        }
+                    }
+                //s=s.erase(i,j-i+1);
+                }
+            else if(s[i]==0x0d&&i+1<len&&s[i+1]==0x0a){
+
+                i++;
+            /*
+                printf("%s",&bufer[0]);
+                bufer="";
+                int x,y;
+                getxy(x,y);
+                //cerr<<x<<" "<<y<<endl;
+                //putchar(0x0a);
+                gotoxy(x,y+1);
+            */
+                bufer+=0x0d;
+                bufer+=0x0a;
+                }
+            else{
+                //if(s[i]==8)bufer+=8,bufer+=' ';
+                bufer+=s[i];
+                }
+            }
+        printf("%s",&bufer[0]);
+        return ;//s
         }
     }
