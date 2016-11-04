@@ -1,4 +1,4 @@
-//Jtol.h v1.7.2.3
+//Jtol.h v1.7.2.4
 #include<bits/stdc++.h>
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0500
@@ -2163,5 +2163,23 @@ namespace Jtol{
                 }
             }
         return ve;
+        }
+    string exec(string cmd){
+        char buffer[128];
+        string result = "";
+        FILE* pipe = popen(cmd.c_str(), "r");
+        if (!pipe) throw std::runtime_error("popen() failed!");
+        try {
+            while (!feof(pipe)) {
+                if (fgets(buffer, 128, pipe) != NULL)
+                    result += buffer;
+                }
+            }
+        catch(...){
+            pclose(pipe);
+            throw;
+            }
+        pclose(pipe);
+        return result;
         }
     }
