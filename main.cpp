@@ -20,11 +20,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     int argc=__argc; char** argv=__argv;
 #pragma GCC diagnostic pop
     Setup();
-    //string s;
-    //ThreadCreate(Get);
-    //cin>>s;
-    //StrToFile(DecodeBase64(s),"out.txt");
-    //cout<<EncodeBase64(FileToStr("c.txt"));
     //HideConsole();
     //Wait(ThreadCreate(WinExample,hInstance));
     //system("pause");

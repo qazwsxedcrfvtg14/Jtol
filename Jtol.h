@@ -1,4 +1,4 @@
-//Jtol.h v1.7.2.2
+//Jtol.h v1.7.2.3
 #include<bits/stdc++.h>
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0500
@@ -2141,5 +2141,27 @@ namespace Jtol{
             }
         printf("%s",&bufer[0]);
         return ;//s
+        }
+    vector<string>split(string s,string cut){
+        vector<string>ve;
+        auto clen=cut.length();
+        while(true){
+            auto pos=s.find(cut);
+            if(pos==string::npos){
+                ve.push_back(s);
+                break;
+                }
+            else{
+                if(pos)
+                    ve.push_back(s.substr(0,pos));
+                else
+                    ve.push_back("");
+                if(pos+clen!=s.length())
+                    s=s.substr(pos+clen);
+                else
+                    s="";
+                }
+            }
+        return ve;
         }
     }
