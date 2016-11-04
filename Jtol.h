@@ -1,4 +1,4 @@
-//Jtol.h v1.7.2.1
+//Jtol.h v1.7.2.2
 #include<bits/stdc++.h>
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0500
@@ -26,6 +26,7 @@ namespace Jtol{
     typedef par Pos;
     typedef SOCKET Net;
     typedef thread* Thread;
+    typedef basic_string<unsigned char> ustring;
     int Keypool[512];
     HDC hdc_;
     int _ScreenX=1920,_ScreenY=1080;
@@ -342,11 +343,10 @@ namespace Jtol{
     string FileToStr(const char *fil){
         fstream fin;
         fin.open(fil,ios::in|ios::binary);
-        string in,ss;
-        while(getline(fin,in)){
-            //cout<<in;
-            ss+=in+"\n";
-            }
+        char c;
+        string ss;
+        while(fin.get(c))
+            ss+=c;
         fin.close();
         return ss;
         }
@@ -2081,7 +2081,7 @@ namespace Jtol{
                         printf("%s",&bufer[0]);
                         bufer="";
                         int x,y;
-                        getxy(x,y);
+                        Getxy(x,y);
                         for(int i=0;i<(79-x);i++)
                             putchar(' ');
                         break;
@@ -2104,7 +2104,7 @@ namespace Jtol{
 
                             printf("%s",&bufer[0]);
                             bufer="";
-                            gotoxy(a[0],a[1]);
+                            GoToxy(a[0],a[1]);
                         //gotoxy(0,0);
                         break;
                         }
