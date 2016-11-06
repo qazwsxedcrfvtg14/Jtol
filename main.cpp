@@ -20,6 +20,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     int argc=__argc; char** argv=__argv;
 #pragma GCC diagnostic pop
     Setup();
+    Net net=nc("irs.pwn.republican",4127);
+    auto &str=nc(net);
+    string s;
+    while(getline(str,s))cout<<s<<endl;
+    Sleep(1000);
+    while(getline(str,s))cout<<s<<endl;
+    nc_close(net);
     //HideConsole();
     //Wait(ThreadCreate(WinExample,hInstance));
     //system("pause");
@@ -80,8 +87,8 @@ void ControlServer(){
     while(1){
         set<Net> snet_c=*snet;
         for(auto sock:snet_c){
-            const char *buf=NetGet(sock);
-            if(strlen(buf)){
+            string buf=NetGet(sock);
+            if(strlen(buf.c_str())){
                 stringstream str;
                 str<<buf;
                 //puts(buf);
@@ -146,8 +153,8 @@ void NetExample(){
     Time tim=GetTime();
     string get;
     while(GetTime()-tim<500){
-        const char *buf=NetGet(net);
-        if(strlen(buf)){
+        string buf=NetGet(net);
+        if(strlen(buf.c_str())){
             get+=buf;
             //printf("~$~");
             //for(int i=0;buf[i];i++)
@@ -187,7 +194,7 @@ void SNetExample(){
     while(1){
         set<Net> snet_c=*snet;
         for(auto sock:snet_c){
-            const char *buf=NetGet(sock);
+            const char *buf=NetGet(sock).c_str();
             if(strlen(buf)){
                 //printf("%s",buf);
                 string s=FileToStr("a.html");

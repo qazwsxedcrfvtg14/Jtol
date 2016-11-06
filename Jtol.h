@@ -1,4 +1,4 @@
-//Jtol.h v1.7.2.4
+//Jtol.h v1.7.2.5
 #include<bits/stdc++.h>
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0500
@@ -159,7 +159,7 @@ namespace Jtol{
         Sleep(t);
         keybd_event(key, 0, KEYEVENTF_KEYUP, 0);
         }
-    SOCKET NetCreat(const char ip[],int port=23,int mode=1){//mode: 1->NoWait 0->Wait
+    Net NetCreat(const char ip[],int port=23,int mode=1){//mode: 1->NoWait 0->Wait
         //printf("%s %d\n",ip,port);
         NetCreatStatr:;
         WSADATA wsaData;
@@ -225,17 +225,65 @@ namespace Jtol{
         NetBuf.erase(sock);
         closesocket(sock);
         }
-    const char* NetGet(Net sock){
+    mutex NetBuf_lock;
+    string NetGet(Net sock){
         //if(strlen(NetBuf))memset(NetBuf,0,sizeof(NetBuf));
-        NetBuf[sock].resize(100000);
-        fill(NetBuf[sock].begin(),NetBuf[sock].end(),0);
-        char *buf=&(NetBuf[sock][0]);
-        if(recv(sock,buf,NetBuf[sock].size(),0)!=SOCKET_ERROR){
-            return buf;
+        NetBuf_lock.lock();
+        string &s=NetBuf[sock];
+        NetBuf_lock.unlock();
+        s="";
+        s.resize(100000);
+        //fill(s.begin(),s,0);
+        char *buf=&(s[0]);
+        int result=recv(sock,buf,NetBuf[sock].size(),0);
+        if(result>0){
+            s.resize(result);
+            return s;
             }
-        else return 0;
+        else if(result==0){
+            //printf("Connection closed\n");
+            //return buf;
+            return "";
+            }
+        else{
+            int error=WSAGetLastError();
+            if(error==10035)
+                result=1;
+            else
+                printf("recv failed: %d %d\n", error,result);
+            //return 0;
+            return "";
+            }
         //return &(NetBuf[sock][0]);
-        return NetBuf[sock].c_str();
+        return s;
+        }
+    string NetGet(Net sock,int &result){
+        //if(strlen(NetBuf))memset(NetBuf,0,sizeof(NetBuf));
+        NetBuf_lock.lock();
+        string &s=NetBuf[sock];
+        NetBuf_lock.unlock();
+        s="";
+        s.resize(100000);
+        //fill(s.begin(),s,0);
+        char *buf=&(s[0]);
+        result=recv(sock,buf,NetBuf[sock].size(),0);
+        if(result>0){
+            s.resize(result);
+            return s;
+            }
+        else if(result==0){
+            return "";
+            }
+        else{
+            int error=WSAGetLastError();
+            if(error==10035)
+                result=1;
+            else
+                printf("recv failed: %d %d\n", error,result);
+            return "";
+            }
+        //return &(NetBuf[sock][0]);
+        return s;
         }
     void NetSend(Net sock,string s){
         send(sock,s.c_str(),s.length(),0);
@@ -2181,5 +2229,60 @@ namespace Jtol{
             }
         pclose(pipe);
         return result;
+        }
+    map<Net,Thread>nc_map;
+    map<Net,stringstream>nc_stream;
+    rwlock nc_lock;
+    void nc_background(Net net){
+        while(true){
+            nc_lock.read_lock();
+            auto th=nc_map[net];
+            auto &str=nc_stream[net];
+            nc_lock.unlock();
+            if(!th)break;
+            int result;
+            string s=NetGet(net,result);
+            if(result==0)break;
+            str.clear();
+            str<<s;
+            //printf("%s",s.c_str());
+            Sleep(1);
+            }
+        //printf("close");
+        NetClose(net);
+        }
+    Net nc(const string& ip,int port=23){//mode: 1->NoWait 0->Wait
+        Net net=NetCreat(ip.c_str(),port,1);
+        nc_lock.write_lock();
+        nc_map[net]=ThreadCreate(nc_background,net);
+        nc_stream[net];
+        nc_lock.unlock();
+        return net;
+        }
+    void nc_close(Net net){
+        auto th=nc_map[net];
+        nc_lock.write_lock();
+        nc_map[net]=0;
+        nc_lock.unlock();
+        Wait(th);
+        nc_lock.write_lock();
+        nc_map.erase(net);
+        nc_stream.erase(net);
+        nc_lock.unlock();
+        }
+    stringstream &nc(Net net){
+        nc_lock.read_lock();
+        auto str=nc_stream.find(net);
+        auto end=nc_stream.end();
+        nc_lock.unlock();
+        if(str!=end)
+            return str->s;
+        else{
+            nc_lock.write_lock();
+            auto &st=nc_stream[net];
+            nc_lock.unlock();
+            return st;
+            }
+
         }
     }
