@@ -15,17 +15,23 @@ int WinExample(HINSTANCE hInstance);
     return 0;
     }*/
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow){
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-variable"
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wunused-variable"
     int argc=__argc; char** argv=__argv;
-#pragma GCC diagnostic pop
+    #pragma GCC diagnostic pop
     Setup();
+    string ss=chars("\n\t\v\b\r\f\a\\\?\'\"\0\x87\xff\xfe\x99\?abc");
+    string sss=phrase_string(chars(R"(\n\t\v\b\r\f\a\\\?\'\"\0\x87\xff\xfe\x99\?abc)"));
+    ss==sss;
+
     Net net=nc("irs.pwn.republican",4127);
     auto &str=nc(net);
     string s;
-    while(getline(str,s))cout<<s<<endl;
-    Sleep(1000);
-    while(getline(str,s))cout<<s<<endl;
+    while(getline(cin,s))
+        NetSend(net,phrase_string(s)+"\n");
+    //while(getline(str,s))cout<<s<<endl;
+    //Sleep(1000);
+    //while(getline(str,s))cout<<s<<endl;
     nc_close(net);
     //HideConsole();
     //Wait(ThreadCreate(WinExample,hInstance));

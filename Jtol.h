@@ -1,4 +1,4 @@
-//Jtol.h v1.7.2.5
+//Jtol.h v1.7.2.6
 #include<bits/stdc++.h>
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0500
@@ -220,22 +220,71 @@ namespace Jtol{
         //DWORD tid;
         //HANDLE thd=CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)chk,(void*)0,0,&tid);
         }
+
+    class rwlock {
+        private:
+            mutex _lock;
+            condition_variable _wcon, _rcon;
+            unsigned _writer, _reader;
+            int _active;
+        public:
+            void read_lock() {
+                unique_lock<mutex> lock(_lock);
+                ++_reader;
+                while(_active < 0 || _writer > 0)
+                    _rcon.wait(lock);
+                --_reader;
+                ++_active;
+                }
+            void write_lock() {
+                unique_lock<mutex> lock(_lock);
+                ++_writer;
+                while(_active != 0)
+                    _wcon.wait(lock);
+                --_writer;
+                _active = -1;
+                }
+            void unlock() {
+                unique_lock<mutex> lock(_lock);
+                if(_active > 0) {
+                    --_active;
+                    if(_active == 0) _wcon.notify_one();
+                    }
+                else{
+                    _active = 0;
+                    if(_writer > 0) _wcon.notify_one();
+                    else if(_reader > 0) _rcon.notify_all();
+                    }
+
+                }
+            rwlock():_writer(0),_reader(0),_active(0){}
+        };
+
     map<Net,string > NetBuf;
+    rwlock NetBuf_lock;
     void NetClose(Net sock){
+        NetBuf_lock.write_lock();
         NetBuf.erase(sock);
+        NetBuf_lock.unlock();
         closesocket(sock);
         }
-    mutex NetBuf_lock;
     string NetGet(Net sock){
         //if(strlen(NetBuf))memset(NetBuf,0,sizeof(NetBuf));
-        NetBuf_lock.lock();
-        string &s=NetBuf[sock];
+        NetBuf_lock.read_lock();
+        auto it=NetBuf.find(sock),ed=NetBuf.end();
         NetBuf_lock.unlock();
+        if(it==ed){
+            NetBuf_lock.write_lock();
+            NetBuf[sock];
+            it=NetBuf.find(sock);
+            NetBuf_lock.unlock();
+            }
+        string &s=it->s;
         s="";
         s.resize(100000);
         //fill(s.begin(),s,0);
         char *buf=&(s[0]);
-        int result=recv(sock,buf,NetBuf[sock].size(),0);
+        int result=recv(sock,buf,s.size(),0);
         if(result>0){
             s.resize(result);
             return s;
@@ -259,14 +308,21 @@ namespace Jtol{
         }
     string NetGet(Net sock,int &result){
         //if(strlen(NetBuf))memset(NetBuf,0,sizeof(NetBuf));
-        NetBuf_lock.lock();
-        string &s=NetBuf[sock];
+        NetBuf_lock.read_lock();
+        auto it=NetBuf.find(sock),ed=NetBuf.end();
         NetBuf_lock.unlock();
+        if(it==ed){
+            NetBuf_lock.write_lock();
+            NetBuf[sock];
+            it=NetBuf.find(sock);
+            NetBuf_lock.unlock();
+            }
+        string &s=it->s;
         s="";
         s.resize(100000);
         //fill(s.begin(),s,0);
         char *buf=&(s[0]);
-        result=recv(sock,buf,NetBuf[sock].size(),0);
+        result=recv(sock,buf,s.size(),0);
         if(result>0){
             s.resize(result);
             return s;
@@ -1432,45 +1488,6 @@ namespace Jtol{
         GetFullPathName(s.c_str(),sizeof(szBuffer),szBuffer,NULL);
         return szBuffer;
         }
-    class rwlock {
-        private:
-            mutex _lock;
-            condition_variable _wcon, _rcon;
-            unsigned _writer, _reader;
-            int _active;
-        public:
-            void read_lock() {
-                unique_lock<mutex> lock(_lock);
-                ++_reader;
-                while(_active < 0 || _writer > 0)
-                    _rcon.wait(lock);
-                --_reader;
-                ++_active;
-                }
-            void write_lock() {
-                unique_lock<mutex> lock(_lock);
-                ++_writer;
-                while(_active != 0)
-                    _wcon.wait(lock);
-                --_writer;
-                _active = -1;
-                }
-            void unlock() {
-                unique_lock<mutex> lock(_lock);
-                if(_active > 0) {
-                    --_active;
-                    if(_active == 0) _wcon.notify_one();
-                    }
-                else{
-                    _active = 0;
-                    if(_writer > 0) _wcon.notify_one();
-                    else if(_reader > 0) _rcon.notify_all();
-                    }
-
-                }
-            rwlock():_writer(0),_reader(0),_active(0){}
-        };
-
 
     typedef RGBQUAD *pBGR;
     Thread Background_Update_Screen_Thread=NULL;
@@ -2233,7 +2250,7 @@ namespace Jtol{
     map<Net,Thread>nc_map;
     map<Net,stringstream>nc_stream;
     rwlock nc_lock;
-    void nc_background(Net net){
+    void nc_background(Net net,bool output){
         while(true){
             nc_lock.read_lock();
             auto th=nc_map[net];
@@ -2245,16 +2262,17 @@ namespace Jtol{
             if(result==0)break;
             str.clear();
             str<<s;
-            //printf("%s",s.c_str());
+            if(output)
+            printf("%s",s.c_str());
             Sleep(1);
             }
         //printf("close");
         NetClose(net);
         }
-    Net nc(const string& ip,int port=23){//mode: 1->NoWait 0->Wait
+    Net nc(const string& ip,int port=23,bool output=true){//mode: 1->NoWait 0->Wait
         Net net=NetCreat(ip.c_str(),port,1);
         nc_lock.write_lock();
-        nc_map[net]=ThreadCreate(nc_background,net);
+        nc_map[net]=ThreadCreate(nc_background,net,output);
         nc_stream[net];
         nc_lock.unlock();
         return net;
@@ -2283,6 +2301,61 @@ namespace Jtol{
             nc_lock.unlock();
             return st;
             }
-
+        }
+    template <typename T, int N>
+        string chars(T (&ca)[N]){
+            return string(ca,N-1);
+            }
+    inline bool is_hex(char c){
+        if('0'<=c&&c<='9')return true;
+        else if('a'<=c&&c<='f')return true;
+        else if('A'<=c&&c<='F')return true;
+        return false;
+        }
+    inline int hex(char c){
+        if('0'<=c&&c<='9')return c-'0';
+        else if('a'<=c&&c<='f')return c-'a'+10;
+        else if('A'<=c&&c<='F')return c-'A'+10;
+        return 0;
+        }
+    string phrase_string(string s){
+        string ret;
+        int sz=s.length();
+        for(int i=0;i<sz;i++){
+            if(s[i]=='\\'){
+                if(i<sz-1&&s[i+1]=='n')
+                    ret+='\n',i++;
+                else if(i<sz-1&&s[i+1]=='t')
+                    ret+='\t',i++;
+                else if(i<sz-1&&s[i+1]=='v')
+                    ret+='\v',i++;
+                else if(i<sz-1&&s[i+1]=='b')
+                    ret+='\b',i++;
+                else if(i<sz-1&&s[i+1]=='r')
+                    ret+='\r',i++;
+                else if(i<sz-1&&s[i+1]=='f')
+                    ret+='\f',i++;
+                else if(i<sz-1&&s[i+1]=='a')
+                    ret+='\a',i++;
+                else if(i<sz-1&&s[i+1]=='\\')
+                    ret+='\\',i++;
+                else if(i<sz-1&&s[i+1]=='?')
+                    ret+='\?',i++;
+                else if(i<sz-1&&s[i+1]=='\'')
+                    ret+='\'',i++;
+                else if(i<sz-1&&s[i+1]=='\"')
+                    ret+='\"',i++;
+                else if(i<sz-1&&s[i+1]=='0')
+                    ret+='\0',i++;
+                else if(i<sz-3&&s[i+1]=='x'&&is_hex(s[i+2])&&is_hex(s[i+3]))
+                    ret+=hex(s[i+2])*16+hex(s[i+3]),i+=3;
+                else if(i<sz-2&&s[i+1]=='x'&&is_hex(s[i+2]))
+                    ret+=hex(s[i+2])*16+hex(s[i+3]),i+=2;
+                else ret+=s[i];
+                }
+            else
+                ret+=s[i];
+            }
+        return ret;
         }
     }
