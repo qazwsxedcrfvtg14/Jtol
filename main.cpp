@@ -19,6 +19,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     #pragma GCC diagnostic ignored "-Wunused-variable"
     int argc=__argc; char** argv=__argv;
     #pragma GCC diagnostic pop
+
     Setup();
     string ss=chars("\n\t\v\b\r\f\a\\\?\'\"\0\x87\xff\xfe\x99\?abc");
     string sss=phrase_string(chars(R"(\n\t\v\b\r\f\a\\\?\'\"\0\x87\xff\xfe\x99\?abc)"));
@@ -43,7 +44,7 @@ int WinExample(HINSTANCE hInstance){
         [](HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)->LRESULT{
             PAINTSTRUCT ps;
             if(msg==WM_PAINT){
-                /*HDC hDC = */BeginPaint(hWnd, &ps);
+                BeginPaint(hWnd, &ps);
                 EndPaint(hWnd, &ps);
                 return 0;
                 }
