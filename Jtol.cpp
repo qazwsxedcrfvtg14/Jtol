@@ -2080,7 +2080,7 @@ namespace Jtol{
     map<Net,Thread>nc_map;
     map<Net,stringstream>nc_stream;
     rwlock nc_lock;
-    void nc_background(Net net,bool output){
+    void nc_background(Net net,int output){
         while(true){
             nc_lock.read_lock();
             auto th=nc_map[net];
@@ -2092,14 +2092,16 @@ namespace Jtol{
             if(result==0)break;
             str.clear();
             str<<s;
-            if(output)
-            printf("%s",s.c_str());
+            if(output==1)
+                printf("%s",s.c_str());
+            else if(output==2)
+                TelnetPrint(s);
             Sleep(1);
             }
         //printf("close");
         NetClose(net);
         }
-    Net nc(const string& ip,int port,bool output){
+    Net nc(const string& ip,int port,int output){
         Net net=NetCreat(ip.c_str(),port,1);
         nc_lock.write_lock();
         nc_map[net]=ThreadCreate(nc_background,net,output);

@@ -238,7 +238,7 @@ namespace Jtol{
     void TelnetPrint(string s);
     vector<string>split(string s,string cut);
     string exec(string cmd);
-    Net nc(const string& ip,int port=23,bool output=true);
+    Net nc(const string& ip,int port=23,int output=1);
     void nc_close(Net net);
     stringstream &nc(Net net);
     template <typename T, int N>
