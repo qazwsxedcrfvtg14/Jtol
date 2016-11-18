@@ -19,14 +19,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     #pragma GCC diagnostic ignored "-Wunused-variable"
     int argc=__argc; char** argv=__argv;
     #pragma GCC diagnostic pop
-
     Setup();
-    Net net=nc("primaries.pwn.republican",1901,2);
-    auto &str=nc(net);
-    string s;
-    while(getline(cin,s))
-        NetSend(net,phrase_string(s)+"\n");
-    nc_close(net);
     //HideConsole();
     //Wait(ThreadCreate(WinExample,hInstance));
     //system("pause");

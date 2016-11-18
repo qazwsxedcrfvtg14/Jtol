@@ -1,4 +1,4 @@
-//Jtol.h v1.7.3
+//Jtol.h v1.7.3.2
 #ifndef JTOL_H_
 #define JTOL_H_
 #include<bits/stdc++.h>
@@ -238,15 +238,55 @@ namespace Jtol{
     void TelnetPrint(string s);
     vector<string>split(string s,string cut);
     string exec(string cmd);
+    struct stream{
+        private:
+            mutex mut;
+            stringstream stri;
+        public:
+        explicit operator bool(){
+            mut.lock();
+            bool ret=(bool)stri;
+            mut.unlock();
+            return ret;
+            }
+        template <typename T>
+        stream & operator<<(const T & data){
+            mut.lock();
+            stri<<data;
+            mut.unlock();
+            return *this;
+            }
+        template <typename T>
+        stream & operator>>(T & data){
+            if(!*this)Sleep(1);
+            mut.lock();
+            stri>>data;
+            mut.unlock();
+            return *this;
+            }
+        void clear(){
+            mut.lock();
+            stri.clear();
+            mut.unlock();
+            }
+        string str(){
+            mut.lock();
+            string s=stri.str();
+            mut.unlock();
+            return s;
+            }
+        };
     Net nc(const string& ip,int port=23,int output=1);
     void nc_close(Net net);
-    stringstream &nc(Net net);
+    bool nc_is_closed(Net net);
+    extern map<Net,mutex>nc_mutex;
+    stream &nc(Net net);
     template <typename T, int N>
     string chars(T (&ca)[N]){
         return string(ca,N-1);
         }
-    inline bool is_hex(char c);
-    inline int hex(char c);
+    bool is_hex(char c);
+    int hex(char c);
     string phrase_string(string s);
     }
 #endif

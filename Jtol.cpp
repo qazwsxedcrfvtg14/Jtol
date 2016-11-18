@@ -1,4 +1,4 @@
-//Jtol.cpp v1.7.3
+//Jtol.cpp v1.7.3.2
 #include<bits/stdc++.h>
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0500
@@ -189,26 +189,12 @@ namespace Jtol{
             }
         return socket1;
         }
-    map<Net,string > NetBuf;
     rwlock NetBuf_lock;
     void NetClose(Net sock){
-        NetBuf_lock.write_lock();
-        NetBuf.erase(sock);
-        NetBuf_lock.unlock();
         closesocket(sock);
         }
     string NetGet(Net sock){
-        NetBuf_lock.read_lock();
-        auto it=NetBuf.find(sock),ed=NetBuf.end();
-        NetBuf_lock.unlock();
-        if(it==ed){
-            NetBuf_lock.write_lock();
-            NetBuf[sock];
-            it=NetBuf.find(sock);
-            NetBuf_lock.unlock();
-            }
-        string &s=it->s;
-        s="";
+        string s;
         s.resize(100000);
         char *buf=&(s[0]);
         int result=recv(sock,buf,s.size(),0);
@@ -224,23 +210,13 @@ namespace Jtol{
             if(error==10035)
                 result=1;
             else
-                printf("recv failed: %d %d\n", error,result);
+                printf("recv failed: %d %d\n", error,result),result=0;
             return "";
             }
         return s;
         }
     string NetGet(Net sock,int &result){
-        NetBuf_lock.read_lock();
-        auto it=NetBuf.find(sock),ed=NetBuf.end();
-        NetBuf_lock.unlock();
-        if(it==ed){
-            NetBuf_lock.write_lock();
-            NetBuf[sock];
-            it=NetBuf.find(sock);
-            NetBuf_lock.unlock();
-            }
-        string &s=it->s;
-        s="";
+        string s;
         s.resize(100000);
         char *buf=&(s[0]);
         result=recv(sock,buf,s.size(),0);
@@ -256,7 +232,7 @@ namespace Jtol{
             if(error==10035)
                 result=1;
             else
-                printf("recv failed: %d %d\n", error,result);
+                printf("recv failed: %d %d\n", error,result),result=0;
             return "";
             }
         return s;
@@ -2059,14 +2035,17 @@ namespace Jtol{
             }
         return ve;
         }
+    mutex exec_mut;
     string exec(string cmd){
-        char buffer[128];
+        exec_mut.lock();
+        //cout<<cmd<<endl;
+        char buffer[1005];
         string result = "";
         FILE* pipe = popen(cmd.c_str(), "r");
         if (!pipe) throw std::runtime_error("popen() failed!");
         try {
             while (!feof(pipe)) {
-                if (fgets(buffer, 128, pipe) != NULL)
+                if (fgets(buffer, 1000, pipe) != NULL)
                     result += buffer;
                 }
             }
@@ -2075,10 +2054,11 @@ namespace Jtol{
             throw;
             }
         pclose(pipe);
+        exec_mut.unlock();
         return result;
         }
     map<Net,Thread>nc_map;
-    map<Net,stringstream>nc_stream;
+    map<Net,stream>nc_stream;
     rwlock nc_lock;
     void nc_background(Net net,int output){
         while(true){
@@ -2098,7 +2078,9 @@ namespace Jtol{
                 TelnetPrint(s);
             Sleep(1);
             }
-        //printf("close");
+        nc_lock.write_lock();
+        nc_map.erase(net);
+        nc_lock.unlock();
         NetClose(net);
         }
     Net nc(const string& ip,int port,int output){
@@ -2110,17 +2092,26 @@ namespace Jtol{
         return net;
         }
     void nc_close(Net net){
-        auto th=nc_map[net];
         nc_lock.write_lock();
-        nc_map[net]=0;
+        if(nc_stream.find(net)!=nc_stream.end())nc_stream.erase(net);
+        nc_lock.unlock();
+        if(nc_is_closed(net))return;
+        nc_lock.write_lock();
+        auto th=nc_map[net];
         nc_lock.unlock();
         Wait(th);
         nc_lock.write_lock();
         nc_map.erase(net);
-        nc_stream.erase(net);
         nc_lock.unlock();
         }
-    stringstream &nc(Net net){
+    bool nc_is_closed(Net net){
+        nc_lock.write_lock();
+        auto it=nc_map.find(net),ed=nc_map.end();
+        bool res=it==ed;
+        nc_lock.unlock();
+        return res;
+        }
+    stream &nc(Net net){
         nc_lock.read_lock();
         auto str=nc_stream.find(net);
         auto end=nc_stream.end();
@@ -2134,13 +2125,13 @@ namespace Jtol{
             return st;
             }
         }
-    inline bool is_hex(char c){
+    bool is_hex(char c){
         if('0'<=c&&c<='9')return true;
         else if('a'<=c&&c<='f')return true;
         else if('A'<=c&&c<='F')return true;
         return false;
         }
-    inline int hex(char c){
+    int hex(char c){
         if('0'<=c&&c<='9')return c-'0';
         else if('a'<=c&&c<='f')return c-'a'+10;
         else if('A'<=c&&c<='F')return c-'A'+10;
