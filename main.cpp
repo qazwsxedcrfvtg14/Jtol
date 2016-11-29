@@ -25,6 +25,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     //system("pause");
     return 0;
     }
+
 int WinExample(HINSTANCE hInstance){
     WinCreat(hInstance,
         [](HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)->LRESULT{
@@ -181,7 +182,7 @@ void NetExample(){
     //HtmlToNode(get)->Print();
     }
 void SNetExample(){
-    set<Net> *snet=SNetCreat(80);
+    set<Net> *snet=SNetCreat(8787);
     if(snet==NULL)return;
     puts("SNet Started!");
     while(1){
@@ -207,7 +208,7 @@ void SNetExample(){
                 snet->erase(sock);
                 }
             }
-        if(Key('E'))break;
+        //if(Key('E'))break;
         Sleep(20);
         }
     }

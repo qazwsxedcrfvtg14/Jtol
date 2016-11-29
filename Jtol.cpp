@@ -1,4 +1,4 @@
-//Jtol.cpp v1.7.3.2
+//Jtol.cpp v1.7.3.3
 #include<bits/stdc++.h>
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0500
@@ -193,28 +193,6 @@ namespace Jtol{
     void NetClose(Net sock){
         closesocket(sock);
         }
-    string NetGet(Net sock){
-        string s;
-        s.resize(100000);
-        char *buf=&(s[0]);
-        int result=recv(sock,buf,s.size(),0);
-        if(result>0){
-            s.resize(result);
-            return s;
-            }
-        else if(result==0){
-            return "";
-            }
-        else{
-            int error=WSAGetLastError();
-            if(error==10035)
-                result=1;
-            else
-                printf("recv failed: %d %d\n", error,result),result=0;
-            return "";
-            }
-        return s;
-        }
     string NetGet(Net sock,int &result){
         string s;
         s.resize(100000);
@@ -230,12 +208,16 @@ namespace Jtol{
         else{
             int error=WSAGetLastError();
             if(error==10035)
-                result=1;
+                result=0;
             else
-                printf("recv failed: %d %d\n", error,result),result=0;
+                printf("recv failed: %d %d\n", error,result);
             return "";
             }
         return s;
+        }
+    string NetGet(Net sock){
+        int result;
+        return NetGet(sock,result);
         }
     void NetSend(Net sock,string s){
         send(sock,s.c_str(),s.length(),0);
@@ -1734,7 +1716,7 @@ namespace Jtol{
             wstring nw;
             int ntp = 0;
             stack<wchar_t>st;
-            int beg;
+            int beg=0;
             int len = (int)(s.length());
             for (int i = 0;i <= len;i++) {
                 if (ntp == 0) {
@@ -1823,7 +1805,7 @@ namespace Jtol{
             wstring nw;
             int ntp = 0;
             stack<wchar_t>st;
-            int beg;
+            int beg=0;
             int len = (int)(s.length());
             for (int i = 0;i <= len;i++) {
                 if (ntp == 0) {
@@ -2063,13 +2045,13 @@ namespace Jtol{
     void nc_background(Net net,int output){
         while(true){
             nc_lock.read_lock();
-            auto th=nc_map[net];
+            bool brk=nc_map.find(net)==nc_map.end();
             auto &str=nc_stream[net];
             nc_lock.unlock();
-            if(!th)break;
+            if(brk)break;
             int result;
             string s=NetGet(net,result);
-            if(result==0)break;
+            if(result<0)break;
             str.clear();
             str<<s;
             if(output==1)
@@ -2079,7 +2061,7 @@ namespace Jtol{
             Sleep(1);
             }
         nc_lock.write_lock();
-        nc_map.erase(net);
+        if(nc_map.find(net)!=nc_map.end())nc_map.erase(net);
         nc_lock.unlock();
         NetClose(net);
         }
@@ -2092,20 +2074,17 @@ namespace Jtol{
         return net;
         }
     void nc_close(Net net){
+        Thread th=0;
+        nc_lock.write_lock();
+        if(nc_map.find(net)!=nc_map.end())th=nc_map[net],nc_map.erase(net);
+        nc_lock.unlock();
+        if(th)Wait(th);
         nc_lock.write_lock();
         if(nc_stream.find(net)!=nc_stream.end())nc_stream.erase(net);
         nc_lock.unlock();
-        if(nc_is_closed(net))return;
-        nc_lock.write_lock();
-        auto th=nc_map[net];
-        nc_lock.unlock();
-        Wait(th);
-        nc_lock.write_lock();
-        nc_map.erase(net);
-        nc_lock.unlock();
         }
     bool nc_is_closed(Net net){
-        nc_lock.write_lock();
+        nc_lock.read_lock();
         auto it=nc_map.find(net),ed=nc_map.end();
         bool res=it==ed;
         nc_lock.unlock();
