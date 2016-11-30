@@ -20,6 +20,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     int argc=__argc; char** argv=__argv;
     #pragma GCC diagnostic pop
     Setup();
+    for(int i=0;i<100;i++){
+        Net net=nc("10.5.5.103",8787,0);
+        NetSend(net,"87\n");
+        auto &str=nc(net);
+        string s;
+        while(!nc_is_closed(net)){
+            while(str>>s);//cout<<s;
+            }
+        nc_close(net);
+        }
+
     //HideConsole();
     //Wait(ThreadCreate(WinExample,hInstance));
     //system("pause");
@@ -196,7 +207,7 @@ void SNetExample(){
                 str+="HTTP/1.1 200 OK\n";
                 str+="Content-Length: "+IntToStr(s.length())+"\n";
                 str+="Content-Type: text/html\n";
-                str+="Server: Jtol/1.0 (Win) (Windows8.1/WindowsNT)\n";
+                str+="Server: Jtol/1.7.3.4 (Win) (Windows10/WindowsNT)\n";
                 str+="Last-Modified: "+UTCTime()+"\n";
                 str+="Accept-Ranges: bytes\n";
                 str+="Date: "+UTCTime()+"\n";

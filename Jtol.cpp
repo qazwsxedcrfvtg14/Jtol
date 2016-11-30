@@ -1,4 +1,4 @@
-//Jtol.cpp v1.7.3.3
+//Jtol.cpp v1.7.3.4
 #include<bits/stdc++.h>
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0500
@@ -139,7 +139,7 @@ namespace Jtol{
         if(WSAStartup(MAKEWORD(2,1),&wsaData)){
             printf("Winsock initiate failed!!\n");
             WSACleanup();
-            return 0;
+            return -1;
             }
         sockaddr_in server;
         server.sin_family = AF_INET;
@@ -151,7 +151,7 @@ namespace Jtol{
             if( server.sin_addr.s_addr == INADDR_NONE ){
                 puts("DNS error");
                 goto NetCreatStatr;
-                return 0;
+                return -1;
                 }
             }
         SOCKET socket1 = socket(AF_INET,SOCK_STREAM,0);
@@ -171,12 +171,12 @@ namespace Jtol{
                 r=select(0,NULL,&Write,&Err,&Timeout);
                 if(r==0){
                     printf("Connect Timeout!\n");
-                    return 0;
+                    return -1;
                     }
                 else{
                     if(!FD_ISSET(socket1, &Write)&&FD_ISSET(socket1, &Err)){
                         printf("Select error!\n");
-                        return 0;
+                        return -1;
                         }
                     }
                 }
@@ -184,7 +184,7 @@ namespace Jtol{
                 printf("Failed to connect to server!\n");
                 goto NetCreatStatr;
                 WSACleanup();
-                return 0;
+                return -1;
                 }
             }
         return socket1;
@@ -195,7 +195,7 @@ namespace Jtol{
         }
     string NetGet(Net sock,int &result){
         string s;
-        s.resize(100000);
+        s.resize(1000);
         char *buf=&(s[0]);
         result=recv(sock,buf,s.size(),0);
         if(result>0){
@@ -203,6 +203,7 @@ namespace Jtol{
             return s;
             }
         else if(result==0){
+            result=-1;
             return "";
             }
         else{
