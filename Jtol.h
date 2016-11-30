@@ -1,4 +1,4 @@
-//Jtol.h v1.7.3.4
+//Jtol.h v1.7.3.5
 #ifndef JTOL_H_
 #define JTOL_H_
 #include<bits/stdc++.h>
@@ -99,14 +99,97 @@ namespace Jtol{
     string NetGet(Net sock);
     string NetGet(Net sock,int &result);
     void NetSend(Net sock,string s);
+    template<typename T>
+    class mutex_set{
+        private:
+            mutex mut;
+            set<T> st;
+        public:
+            friend class iter;
+            class iter{
+                private:
+                    typename set<T>::iterator it;
+                    mutex *mu;
+                public:
+                    iter(){}
+                    iter(const typename set<T>::iterator &_it,mutex * _mu){it=_it;mu=_mu;}
+                    const T& operator*(){
+                        mu->lock();
+                        const T &ret=*it;
+                        mu->unlock();
+                        return ret;
+                        }
+                    const T* operator->(){
+                        mu->lock();
+                        const T &ret=*it;
+                        mu->unlock();
+                        return &ret;
+                        }
+                    iter& operator++(){
+                        mu->lock();
+                        ++it;
+                        mu->unlock();
+                        return *this;
+                        }
+                    bool operator==(iter &b){
+                        mu->lock();
+                        bool ret=(it==b.it);
+                        mu->unlock();
+                        return ret;
+                        }
+                    bool operator!=(iter &b){
+                        mu->lock();
+                        bool ret=(it!=b.it);
+                        mu->unlock();
+                        return ret;
+                        }
+                };
+            iter begin(){
+                mut.lock();
+                iter it(st.begin(),&mut);
+                mut.unlock();
+                return it;
+                }
+            iter end(){
+                mut.lock();
+                iter it(st.end(),&mut);
+                mut.unlock();
+                return it;
+                }
+            auto size(){
+                mut.lock();
+                auto ret=st.size();
+                mut.unlock();
+                return ret;
+                }
+            auto empty(){
+                mut.lock();
+                auto ret=st.empty();
+                mut.unlock();
+                return ret;
+                }
+            auto insert(const T &val){
+                mut.lock();
+                auto res=st.insert(val);
+                pair<iter,bool> ret(iter(res.f,&mut),res.s);
+                mut.unlock();
+                return ret;
+                }
+            auto erase(const T &val){
+                mut.lock();
+                auto ret=st.erase(val);
+                mut.unlock();
+                return ret;
+                }
+            void clear(){
+                mut.lock();
+                st.clear();
+                mut.unlock();
+                }
+        };
     extern vector<string> HostIP;
     void SetHostIP();
-    struct SNetCreatFncStruct{
-        vector<Net> *server_sockfd;
-        set<Net>*client_sockfd_list;
-        };
-    void SNetCreatFnc(SNetCreatFncStruct *SNCF);
-    set<Net>* SNetCreat(int port=23,int mode=1);
+    shared_ptr<mutex_set<Net>> SNetCreat(int port=23,int mode=1);
     string FileToStr(const char *fil);
     void StrToFile(string s,const char fil[]);
     string UTCTime();
@@ -280,7 +363,7 @@ namespace Jtol{
     void nc_close(Net net);
     bool nc_is_closed(Net net);
     extern map<Net,mutex>nc_mutex;
-    stream &nc(Net net);
+    stream &nc(Net net,int output=1);
     template <typename T, int N>
     string chars(T (&ca)[N]){
         return string(ca,N-1);

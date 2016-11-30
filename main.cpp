@@ -20,9 +20,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     int argc=__argc; char** argv=__argv;
     #pragma GCC diagnostic pop
     Setup();
-    for(int i=0;i<100;i++){
-        Net net=nc("10.5.5.103",8787,0);
-        NetSend(net,"87\n");
+    SNetExample();
+    for(int i=0;i<5;i++){
+        Net net=nc("10.5.5.103",8787,1);
+        NetSend(net,"cat\n");
         auto &str=nc(net);
         string s;
         while(!nc_is_closed(net)){
@@ -86,11 +87,11 @@ void Control(){
 
 void ControlServer(){
     HideConsole();
-    set<Net> *snet=SNetCreat(23);
+    auto snet=SNetCreat(23);
     if(snet==NULL)return;
     puts("SNet Started!");
     while(1){
-        set<Net> snet_c=*snet;
+        auto &snet_c=*snet;
         for(auto sock:snet_c){
             string buf=NetGet(sock);
             if(strlen(buf.c_str())){
@@ -193,34 +194,47 @@ void NetExample(){
     //HtmlToNode(get)->Print();
     }
 void SNetExample(){
-    set<Net> *snet=SNetCreat(8787);
-    if(snet==NULL)return;
+    auto snet=SNetCreat(8787);
+    if(snet==nullptr)return;
+    auto &snet_c=*snet;
     puts("SNet Started!");
+    string fil=FileToStr("a.html");
+    int len=fil.length();
     while(1){
-        set<Net> snet_c=*snet;
+        vector<Net> need_erase;
         for(auto sock:snet_c){
-            const char *buf=NetGet(sock).c_str();
-            if(strlen(buf)){
+            auto &str=nc(sock,0);
+            //NetClose(sock);
+            //need_erase.push_back(sock);
+            //continue;
+            string s;//=NetGet(sock);
+            str>>s;
+            if(s.length()){
                 //printf("%s",buf);
-                string s=FileToStr("a.html");
                 string str;
                 str+="HTTP/1.1 200 OK\n";
-                str+="Content-Length: "+IntToStr(s.length())+"\n";
+                str+="Content-Length: "+IntToStr(len)+"\n";
                 str+="Content-Type: text/html\n";
                 str+="Server: Jtol/1.7.3.4 (Win) (Windows10/WindowsNT)\n";
                 str+="Last-Modified: "+UTCTime()+"\n";
                 str+="Accept-Ranges: bytes\n";
                 str+="Date: "+UTCTime()+"\n";
                 str+="\n";
-                str+=s;
+                str+=fil;
                 //cout<<str;
                 NetSend(sock,&str[0]);
-                NetClose(sock);
-                snet->erase(sock);
+                need_erase.push_back(sock);
+                }
+            else if(nc_is_closed(sock)){
+                need_erase.push_back(sock);
                 }
             }
+        for(auto sock:need_erase){
+            snet_c.erase(sock);
+            nc_close(sock);
+            }
         //if(Key('E'))break;
-        Sleep(20);
+        Sleep(1);
         }
     }
 

@@ -1,4 +1,4 @@
-//Jtol.cpp v1.7.3.4
+//Jtol.cpp v1.7.3.5
 #include<bits/stdc++.h>
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0500
@@ -242,28 +242,28 @@ namespace Jtol{
             }
         HostIP.push_back("127.0.0.1");
         }
-    void SNetCreatFnc(SNetCreatFncStruct *SNCF){
+    void SNetCreatFnc(vector<Net> server_sockfd,shared_ptr<mutex_set<Net>> client_sockfd_list,int mode){
         vector<sockaddr_in> client_address;
         client_address.push_back(sockaddr_in());
         Net client_tmp;
         int client_len=sizeof(client_address.back());
-        int sz=(SNCF->server_sockfd)->size();
+        int sz=server_sockfd.size();
         while(1){
             for(int i=0;i<sz;i++){
-                client_tmp=accept((SNCF->server_sockfd)->at(i),(struct sockaddr *)&client_address.back(), &client_len);
+                client_tmp=accept(server_sockfd.at(i),(struct sockaddr *)&client_address.back(), &client_len);
                 if((int)client_tmp != SOCKET_ERROR){
                     printf("[%s] Connect!\n",inet_ntoa(client_address.back().sin_addr));
                     //CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)Fnc,(void*)(SNCF->client_sockfd_list)->back(),0,NULL);
                     client_address.push_back(sockaddr_in());
-                    (SNCF->client_sockfd_list)->insert(client_tmp);
+                    ioctlsocket(client_tmp,FIONBIO, (u_long FAR*) &mode);
+                    client_sockfd_list->insert(client_tmp);
                     }
-                Sleep(50);
+                Sleep(1);
                 }
 			}
         }
-    set<Net>* SNetCreat(int port,int mode){
-        vector<Net> *server_sockfd;
-        server_sockfd=new vector<Net>;
+    shared_ptr<mutex_set<Net>> SNetCreat(int port,int mode){
+        vector<Net> server_sockfd;
         sockaddr_in server_address[100];
         int server_len[100];
         //Winsock DLL
@@ -272,26 +272,26 @@ namespace Jtol{
             printf("Winsock Error\n");
             return NULL;
             }
-        SetHostIP();
+        if(HostIP.size()==0)SetHostIP();
         for(auto x:HostIP)
             puts(x.c_str());
         int Err=0,sz=HostIP.size();
         for(int i=0;i<sz;i++){
             int err=0;
-            server_sockfd->push_back(socket(AF_INET, SOCK_STREAM, 0));
-            if((int)server_sockfd->at(i) == SOCKET_ERROR) {
+            server_sockfd.push_back(socket(AF_INET, SOCK_STREAM, 0));
+            if((int)server_sockfd.at(i) == SOCKET_ERROR) {
                 printf("Socket %d Error\n",i);
                 err=1;
                 }
             server_address[i].sin_family = AF_INET;
-            server_address[i].sin_addr.s_addr = inet_addr(&HostIP[i][0]);
+            server_address[i].sin_addr.s_addr = inet_addr(HostIP[i].c_str());
             server_address[i].sin_port = htons(port);
             server_len[i] = sizeof(server_address);
-            if(bind(server_sockfd->at(i), (struct sockaddr *)&server_address[i], server_len[i]) < 0) {
+            if(bind(server_sockfd.at(i), (struct sockaddr *)&server_address[i], server_len[i]) < 0) {
                 printf("Bind %d Error\n",i);
                 err=1;
                 }
-            if(listen(server_sockfd->at(i), 5) < 0) {
+            if(listen(server_sockfd.at(i), 5) < 0) {
                 printf("Listen %d Error\n",i);
                 err=1;
                 }
@@ -299,20 +299,16 @@ namespace Jtol{
                 Err++;
                 }
             else{
-                ioctlsocket(server_sockfd->at(i),FIONBIO, (u_long FAR*) &mode);
+                ioctlsocket(server_sockfd.at(i),FIONBIO, (u_long FAR*) &mode);
                 }
             }
+        shared_ptr<mutex_set<Net>>client_sockfd_list(new mutex_set<Net>);
         if(Err==sz){
             printf("Error %d\n",sz);
-            return NULL;
+            client_sockfd_list->insert(-1);
+            return nullptr;
             }
-        set<Net> *client_sockfd_list;
-        client_sockfd_list = new set<Net>;
-        SNetCreatFncStruct *SNCF;
-        SNCF=new SNetCreatFncStruct;
-        SNCF->client_sockfd_list=client_sockfd_list;
-        SNCF->server_sockfd=server_sockfd;
-        CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)SNetCreatFnc,(void*)SNCF,0,NULL);
+        ThreadCreate(SNetCreatFnc,server_sockfd,client_sockfd_list,mode);
         return client_sockfd_list;
         }
     string FileToStr(const char *fil){
@@ -2049,6 +2045,7 @@ namespace Jtol{
             bool brk=nc_map.find(net)==nc_map.end();
             auto &str=nc_stream[net];
             nc_lock.unlock();
+            //printf("^%d\n",brk);
             if(brk)break;
             int result;
             string s=NetGet(net,result);
@@ -2057,9 +2054,7 @@ namespace Jtol{
             str<<s;
             if(output==1)
                 printf("%s",s.c_str());
-            else if(output==2)
-                TelnetPrint(s);
-            Sleep(1);
+            Sleep(15);
             }
         nc_lock.write_lock();
         if(nc_map.find(net)!=nc_map.end())nc_map.erase(net);
@@ -2091,7 +2086,7 @@ namespace Jtol{
         nc_lock.unlock();
         return res;
         }
-    stream &nc(Net net){
+    stream &nc(Net net,int output){
         nc_lock.read_lock();
         auto str=nc_stream.find(net);
         auto end=nc_stream.end();
@@ -2100,6 +2095,7 @@ namespace Jtol{
             return str->s;
         else{
             nc_lock.write_lock();
+            nc_map[net]=ThreadCreate(nc_background,net,output);
             auto &st=nc_stream[net];
             nc_lock.unlock();
             return st;
